@@ -1,0 +1,13 @@
+<form #hireMeForm="ngForm" (ngSubmit)="submit(hireMeForm)" ngNativeValidate>
+  <div class="row my-3">
+    <div class="col-sm-12 col-md-6">
+      <input required type="number" class="form-control" placeholder="Number 1" aria-label="Number 1"
+             name="number1" [(ngModel)]="model.number1">
+    </div>
+    <div class="col-sm-12 col-md-6">
+      <input required type="number" class="form-control" placeholder="Number 2" aria-label="Number 2"
+             name="number2" [(ngModel)]="model.number2">
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">POST</button>
+</form>
