@@ -12,17 +12,22 @@ export class TestapiComponent implements OnInit {
     number1: 2,
     number2: 3,
   }
-  result = undefined;
+  loading = false;
+  result: any;
+
   constructor(private addService: AddService) { }
 
   ngOnInit(): void {
   }
 
   submit(formData: any) {
-    console.log('formData:');
-    console.log(formData);
-    console.log(formData.value.number1)
-    console.log(formData.value.number2)
-    this.addService.addReq(formData.value.number1, formData.value.number2).subscribe(data => console.log('Backend response:', data));
+    this.result = undefined; // Clear any existing result
+    this.loading = true      // Loading flag so we can show a spinner
+    // console.log('formData:');
+    // console.log(formData);
+    // console.log(formData.value.number1)
+    // console.log(formData.value.number2)
+    this.addService.addReq(formData.value.number1, formData.value.number2).subscribe(
+      data => {this.result = data; this.loading = false;});
   }
 }

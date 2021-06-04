@@ -1,13 +1,26 @@
-<form #hireMeForm="ngForm" (ngSubmit)="submit(hireMeForm)" ngNativeValidate>
-  <div class="row my-3">
-    <div class="col-sm-12 col-md-6">
+<h1 class="text-center">Super hard to calculate math problem that NEEDS to be done on the backend</h1>
+<br>
+<form class="text-center" #hireMeForm="ngForm" (ngSubmit)="submit(hireMeForm)" ngNativeValidate>
+  <div class="row my-3 align-items-center">
+    <div class="col-sm-12 col-md-5">
       <input required type="number" class="form-control" placeholder="Number 1" aria-label="Number 1"
              name="number1" [(ngModel)]="model.number1">
     </div>
-    <div class="col-sm-12 col-md-6">
+    <div class="col-sm-12 col-md-2">
+      <i class="bi-plus" style="font-size: 5rem;"></i>
+    </div>
+    <div class="col-sm-12 col-md-5">
       <input required type="number" class="form-control" placeholder="Number 2" aria-label="Number 2"
              name="number2" [(ngModel)]="model.number2">
     </div>
   </div>
   <button type="submit" class="btn btn-primary">POST</button>
+
 </form>
+<div class="text-center m-2">
+  <div *ngIf="loading" class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+  <h1 *ngIf="result">{{result}}</h1>
+</div>
+
