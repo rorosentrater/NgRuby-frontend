@@ -2,3 +2,21 @@
 <p>This is a simple demonstration of how websockets can be used to make a chat app. This example operates on only 1
   GLOBAL chat room and messages aren't stored in a database. Grab a friend or open this page in a second browser and
   start sending messages. A message log will be built and displayed below as messages are exchanged.</p>
+<!--<div class="row">-->
+<!--  <form class="text-center" #messageForm="ngForm" (ngSubmit)="submit(messageForm)" ngNativeValidate>-->
+<!--    <input type="text" class="col-sm-12 col-md-6" [(ngModel)]="newMessage">-->
+<!--    <button class="col-sm-12 col-md-6" type="submit"></button>-->
+<!--  </form>-->
+<!--</div>-->
+<form class="text-center" #messageForm="ngForm" (ngSubmit)="submit(messageForm)" ngNativeValidate>
+  <div class="row my-3 align-items-center">
+    <div class="col-sm-12">
+      <input required type="text" class="form-control" placeholder="Message" aria-label="Message"
+             name="message" [(ngModel)]="model.newMessage">
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">Send Message</button>
+</form>
+<h4 *ngFor="let msg of messages; ">
+  {{msg | json}}
+</h4>

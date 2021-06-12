@@ -9,16 +9,19 @@ import { SimpleWebsocketService } from '../services/simpleWebsocket/simple-webso
 })
 export class WebsocketComponent implements OnInit {
 
+  messages: any[] = [];
+  model = {
+    newMessage: ''
+  }
+
   constructor(private service: SimpleWebsocketService) { }
 
   ngOnInit(): void {
+    // Sub to the messages observable
     this.service.messages$.subscribe(
       msg => {
         console.log('Message from server:', msg)
-        // console.log(typeof msg)
-        // msg = JSON.parse(msg)
-        // console.log('Message from server parsed:', msg)
-        // console.log(typeof msg)
+        this.messages.unshift(msg) // Push messages to local array so this component can reference and display them
       },
       error => {
         console.log('Error on socket connection:', error)
@@ -27,8 +30,10 @@ export class WebsocketComponent implements OnInit {
         console.log('this is a complete or something idk. Connection was closed?')
       }
     )
-    this.service.sendMessage({"action": "whatever", "message": {'key': 'val'}})
-    this.service.sendMessage({"action": "whatever", "message": 'simple string message'})
+  }
+
+  submit(formData: any) {
+    this.service.sendMessage({"action": "whatever", "message": formData.value.message})
   }
 
 }
