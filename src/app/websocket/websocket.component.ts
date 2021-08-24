@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { SimpleWebsocketService } from '../services/simpleWebsocket/simple-websocket.service'
+import { AdvWebsocketService } from '../services/advWebsocket/adv-websocket.service'
 
 
 @Component({
@@ -9,31 +9,59 @@ import { SimpleWebsocketService } from '../services/simpleWebsocket/simple-webso
 })
 export class WebsocketComponent implements OnInit {
 
-  messages: any[] = [];
-  model = {
+  messages: any[] = []; // array we will fill with messages from SimpleWebsocketService
+  advMessages: any[] = []; // array we will fill with messages from SimpleWebsocketService
+  advMessages2: any[] = []; // array we will fill with messages from SimpleWebsocketService
+  // Model for chat box form
+  advModel = {
     newMessage: ''
   }
+  advModel2 = {
+    newMessage: ''
+  }
+  // @ts-ignore
+  sub;
+  // @ts-ignore
+  sub2;
 
-  constructor(private service: SimpleWebsocketService) { }
+  constructor(public advService: AdvWebsocketService) { }
 
   ngOnInit(): void {
+
     // Sub to the messages observable
-    this.service.messages$.subscribe(
-      msg => {
-        console.log('Message from server:', msg)
-        this.messages.unshift(msg) // Push messages to local array so this component can reference and display them
+    this.sub = this.advService.messages$.subscribe(
+        (msg: any) => {
+        console.log('ADV Message from server:', msg)
+        this.advMessages.unshift(msg) // Push messages to local array so this component can reference and display them
       },
-      error => {
-        console.log('Error on socket connection:', error)
+        (error: any) => {
+        console.log('ADV Error on socket connection:', error)
       },
       () => {
-        console.log('this is a complete or something idk. Connection was closed?')
+        console.log('ADV Socket connection closed. By server or client?')
+      }
+    )
+
+    this.sub2 = this.advService.messages$.subscribe(
+      (msg: any) => {
+        console.log('2 ADV Message from server:', msg)
+        this.advMessages2.unshift(msg) // Push messages to local array so this component can reference and display them
+      },
+      (error: any) => {
+        console.log('2 ADV Error on socket connection:', error)
+      },
+      () => {
+        console.log('2 ADV Socket connection closed. By server or client?')
       }
     )
   }
 
-  submit(formData: any) {
-    this.service.sendMessage({"action": "whatever", "message": formData.value.message})
+
+  advSubmit(advmessageForm: any) {
+    this.advService.sendMessage({"action": "whatever", "message": advmessageForm.value.message})
   }
 
+  advSubmit2(advmessageForm: any) {
+    this.advService.sendMessage({"action": "whatever", "message": advmessageForm.value.message})
+  }
 }
