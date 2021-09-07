@@ -18,6 +18,7 @@ const envConfigFile = `export const environment = {
   backendWebsocketEndpoint: '${process.env.BACKEND_WEBSOCKET}',
   production: false
 };`;
+
 console.log(colors.magenta('The file `environment.ts` will be written with the following content: \n'));
 console.log(colors.grey(envConfigFile));
 writeFile(targetPath, envConfigFile, function (err: any) {
