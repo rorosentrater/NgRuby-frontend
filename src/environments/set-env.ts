@@ -12,7 +12,7 @@ const targetPath = './environment.ts';
 const colors = require('colors');
 require('dotenv').load();
 
-// `.env` file structure
+// `environment.ts` file structure
 const envConfigFile = `export const environment = {
   backendEndpoint: '${process.env.BACKEND_ENDPOINT}',
   backendWebsocketEndpoint: '${process.env.BACKEND_WEBSOCKET}',
