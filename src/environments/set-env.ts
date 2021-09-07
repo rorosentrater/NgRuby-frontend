@@ -28,3 +28,4 @@ writeFile(targetPath, envConfigFile, function (err: any) {
     console.log(colors.magenta(`Angular environment.ts file generated correctly at ${targetPath} \n`));
   }
 });
+
