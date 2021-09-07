@@ -6,11 +6,11 @@ const writeFile = fs.writeFile;
 
 // Configure Angular `environment.ts` file path
 // const targetPath = './environment.ts'; // TODO: I think you overwrite prod and then call ng build --prod
-const targetPath = './environment.ts';
+const targetPath = './src/environments/environment.ts';
 
 // Load node modules
 const colors = require('colors');
-require('dotenv').load();
+require('dotenv');
 
 // `environment.ts` file structure
 const envConfigFile = `export const environment = {
