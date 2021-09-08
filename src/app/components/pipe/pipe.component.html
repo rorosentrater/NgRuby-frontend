@@ -1,0 +1,11 @@
+<h2>Without pipe:</h2>
+<b>{{myText}}</b>
+<h2>With pipe:</h2>
+<b>{{myText | butts}}</b>
+<p>There are tons of good builtins. Look before making your own. Most can also be configured with params.
+  Here is the same number displayed with the currency pipe using different params</p>
+<ul>
+  <li>{{myNumber | currency}}</li>
+  <li>{{myNumber | currency : 'USD' : 'symbol' : '1.0-0'}}</li>
+  <li>{{myNumber | currency:'JPY'}}</li>
+</ul>
