@@ -1,0 +1,9 @@
+<p>I am a parent component</p>
+<!-- We are going to assign the value of this number input to a variable which we will pass into our child as an input-->
+<input [(ngModel)]="parentNumber" type="number">
+<!-- Child component will output something to us, which we will display here in the parent -->
+<p>Child says {{stringFromChild}}</p>
+<hr>
+
+<!-- now we will render the child component and pass parentNumber's value in as an input param called "numberFromParent" -->
+<app-child [numberFromParent]="parentNumber" (ChildEvent)="stringFromChild = $event"></app-child>

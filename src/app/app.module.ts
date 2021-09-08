@@ -10,6 +10,8 @@ import { TestapiComponent } from './testapi/testapi.component';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { WebsocketComponent } from './websocket/websocket.component';
+import { ComponentCommunicationComponent } from './component-communication/component-communication.component';
+import { ChildComponent } from './component-communication/child/child.component';
 
 @NgModule({
   declarations: [
@@ -18,7 +20,9 @@ import { WebsocketComponent } from './websocket/websocket.component';
     TestapiComponent,
     HeaderComponent,
     FooterComponent,
-    WebsocketComponent
+    WebsocketComponent,
+    ComponentCommunicationComponent,
+    ChildComponent
   ],
   imports: [
     BrowserModule,

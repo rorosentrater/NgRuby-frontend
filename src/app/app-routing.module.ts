@@ -3,17 +3,14 @@ import { RouterModule, Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
 import { TestapiComponent } from './testapi/testapi.component';
 import { WebsocketComponent } from './websocket/websocket.component';
+import { ComponentCommunicationComponent } from './component-communication/component-communication.component';
 
 
 
 const routes: Routes = [
-  // { path: 'octoprint-alexa', component: OctoprintComponent },
-  // { path: 'octoprint-alexa/privacy', component: OctoprintPrivacyComponent },
-  // { path: 'octoprint-alexa/tos', component: OctoprintTosComponent },
-  // { path: 'scotts-appliance', component: ScottsapplianceComponent },
-  // { path: 'hire-me', component: EmailMeComponent },
 
   { path: 'test-api', component: TestapiComponent },
+  { path: 'component-communication', component: ComponentCommunicationComponent },
   { path: 'websocket-chat', component: WebsocketComponent },
   { path: 'home', component: HomeComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' }, // Default route for www.site.com
