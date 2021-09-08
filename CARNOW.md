@@ -24,7 +24,12 @@
       * Run (Might like npm better)
       * Test (Might like npm better)
       * Build (Might like npm better)
- 2. SASS 
+2. SASS 
+3. Routing
+4. Components
+    * Show how information is passed between components
+5. Services
+6. Pipe
   
 ### RX/JS
 ### Chime?

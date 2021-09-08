@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AdvWebsocketService } from '../services/advWebsocket/adv-websocket.service'
+import { AdvWebsocketService } from '../../services/advWebsocket/adv-websocket.service'
 
 
 @Component({

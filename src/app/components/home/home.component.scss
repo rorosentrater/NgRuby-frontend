@@ -1,6 +1,6 @@
 //https://sass-lang.com/guide
 // you can call other files. This is basically vanilla @import but for sass files
-@use '../header/useMe';
+@use 'src/app/components/header/useMe';
 // useMe.scss
 // .from-another-file {
 //  color: red;
