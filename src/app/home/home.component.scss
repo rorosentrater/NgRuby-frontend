@@ -1,0 +1,41 @@
+//https://sass-lang.com/guide
+// you can call other files. This is basically vanilla @import but for sass files
+@use '../header/useMe';
+// useMe.scss
+// .from-another-file {
+//  color: red;
+//}
+
+h1  {
+  color: blue;
+}
+
+// Variables
+$color-your-UI\UX-dev-is-super-particular-about: #df29ff;
+
+// You can ref entire chunks of CSS using mixins. Even cooler is they can accept variables that can be referenced in
+// the definition so you can make prefab CSS that can easily be spun into different colors or whatever
+@mixin theme($theme-color: #d72b2b) {
+  background: $theme-color;
+  box-shadow: 10px 5px 5px rgba($theme-color, .70);
+  color: #fff;
+}
+
+.fancy {
+  ul {
+    color: $color-your-UI\UX-dev-is-super-particular-about;
+  }
+  a {
+    font-size: 3em;
+  }
+}
+.mixin-default {
+  @include theme;
+}
+
+.mixin-param-override {
+  @include theme($theme-color: #2d531d);
+  margin: 20px 40 - 20px; // you can do math without having to call calc()
+}
+
+
