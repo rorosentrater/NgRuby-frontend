@@ -31,6 +31,7 @@ export class ServiceComm1Component implements OnInit {
   }
 
   ngOnInit(): void {
+
   }
 
 }
