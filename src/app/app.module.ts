@@ -14,6 +14,11 @@ import { ComponentCommunicationComponent } from './components/component-communic
 import { ChildComponent } from './components/component-communication/child/child.component';
 import { PipeComponent } from './components/pipe/pipe.component';
 import { ButtsPipe } from './pipes/butts.pipe';
+import { ServiceComm1Component } from './components/component-service-communication/parent-child/service-comm1/service-comm1.component';
+import { ServiceComm2Component } from './components/component-service-communication/parent-child/service-comm2/service-comm2.component';
+import { UnrelatedComponent } from './components/component-service-communication/component-component/unrelated/unrelated.component';
+import { CtoCComponent } from './components/component-service-communication/component-component/cto-c/cto-c.component';
+import { Unrelated2Component } from './components/component-service-communication/component-component/unrelated2/unrelated2.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +31,12 @@ import { ButtsPipe } from './pipes/butts.pipe';
     ComponentCommunicationComponent,
     ChildComponent,
     PipeComponent,
-    ButtsPipe
+    ButtsPipe,
+    ServiceComm1Component,
+    ServiceComm2Component,
+    UnrelatedComponent,
+    CtoCComponent,
+    Unrelated2Component
   ],
   imports: [
     BrowserModule,

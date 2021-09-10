@@ -28,7 +28,9 @@
 3. Routing
 4. Components
     * Show how information is passed between components
+    * https://angular.io/guide/component-interaction
 5. Services
+   * Good primer series on RX/JS https://academind.com/tutorials/understanding-rxjs
 6. Pipe
   
 ### RX/JS
