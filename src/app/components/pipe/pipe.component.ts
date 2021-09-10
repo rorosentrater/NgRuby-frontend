@@ -7,6 +7,10 @@ import { Component, OnInit } from '@angular/core';
 })
 export class PipeComponent implements OnInit {
   myText = 'It smells'
+  myObj = {
+    ONE: 1,
+    TWO: 2
+  }
   myNumber = 24.99
   constructor() { }
 
