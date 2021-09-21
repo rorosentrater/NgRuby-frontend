@@ -19,6 +19,7 @@ import { ServiceComm2Component } from './components/component-service-communicat
 import { UnrelatedComponent } from './components/component-service-communication/component-component/unrelated/unrelated.component';
 import { CtoCComponent } from './components/component-service-communication/component-component/cto-c/cto-c.component';
 import { Unrelated2Component } from './components/component-service-communication/component-component/unrelated2/unrelated2.component';
+import { ChimeComponent } from './components/chime/chime/chime.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { Unrelated2Component } from './components/component-service-communicatio
     ServiceComm2Component,
     UnrelatedComponent,
     CtoCComponent,
-    Unrelated2Component
+    Unrelated2Component,
+    ChimeComponent
   ],
   imports: [
     BrowserModule,

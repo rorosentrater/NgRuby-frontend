@@ -1,0 +1,46 @@
+<audio id="{{audioElementID}}"></audio>
+<h1>chime testing!</h1>
+<form #createMeetingForm="ngForm" (ngSubmit)="createMeeting(createMeetingForm)">
+  <div class="mb-3">
+    <label for="meetingTitle" class="form-label">Meeting Title</label>
+    <input type="text" class="form-control" name="meetingTitle" id="meetingTitle" aria-describedby="meetingTitleHelp" [(ngModel)]="meetingTitle" required>
+    <div id="meetingTitleHelp" class="form-text">This will just be used to alias the uuid of the meeting. No dupes!</div>
+  </div>
+  <div class="mb-3">
+    <label for="meetingTitle" class="form-label">Username</label>
+    <input type="text" class="form-control" name="attendeeName" id="attendeeName" aria-describedby="attendeeNameHelp" [(ngModel)]="attendeeName" required>
+    <div id="attendeeNameHelp" class="form-text">Again this will just be an alias for your attendee uuid. Dupes ok?</div>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+  <div *ngIf="createMeetingLoading" class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</form>
+  <div class="mb-3">
+    <h3>attendeeId: {{attendeeId}}</h3>
+    <h3>meetingId: {{meetingId}}</h3>
+  </div>
+  <div class="mb-3">
+    <button type="button" class="btn btn-primary" (click)="createLogStream()">createLogStream</button>
+    <div *ngIf="createLogStreamLoading" class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div class="mb-3">
+    <button type="button" class="btn btn-primary" (click)="createBrowserLogStream()">createBrowserEventLogStream</button>
+    <div *ngIf="createBrowserLogStreamLoading" class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+<div class="mb-3">
+  <button type="button" class="btn btn-danger" (click)="endCurrentMeeting()">endCurrentMeeting</button>
+<!--  <div *ngIf="createBrowserLogStreamLoading" class="spinner-border text-primary" role="status">-->
+<!--    <span class="visually-hidden">Loading...</span>-->
+<!--  </div>-->
+</div>
+<div class="mb-3">
+  <button type="button" class="btn btn-success" (click)="startMeeting()">startMeeting</button>
+  <!--  <div *ngIf="createBrowserLogStreamLoading" class="spinner-border text-primary" role="status">-->
+  <!--    <span class="visually-hidden">Loading...</span>-->
+  <!--  </div>-->
+</div>

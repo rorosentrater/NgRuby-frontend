@@ -7,7 +7,7 @@ import { ComponentCommunicationComponent } from './components/component-communic
 import { PipeComponent } from './components/pipe/pipe.component';
 import { ServiceComm1Component } from './components/component-service-communication/parent-child/service-comm1/service-comm1.component'
 import { CtoCComponent } from './components/component-service-communication/component-component/cto-c/cto-c.component'
-
+import {ChimeComponent} from "./components/chime/chime/chime.component";
 
 
 const routes: Routes = [
@@ -18,6 +18,7 @@ const routes: Routes = [
   { path: 'pipe', component: PipeComponent },
   { path: 'service-state-communication', component: ServiceComm1Component },
   { path: 'component-service-component', component: CtoCComponent },
+  { path: 'chime', component: ChimeComponent },
   { path: '', redirectTo: '/home', pathMatch: 'full' }, // Default route for www.site.com
   { path: '**', redirectTo: '/home'} // Redirects any unknown url to home. MUST BE LAST
 ];
