@@ -10,7 +10,9 @@ import {ChimeService} from '../../../services/chime/chime.service';
 })
 export class ChimeComponent implements OnInit {
   audioElementID = environment.chimeAudioOutputElementID
+  videoElementID = environment.chimeVideoOutputElementID
   createMeetingLoading = false
+  easyCreateMeetingLoading = false
   createLogStreamLoading = false
   createBrowserLogStreamLoading = false
 
@@ -88,5 +90,15 @@ export class ChimeComponent implements OnInit {
     this.chimeService.startMeeting(this.meetingData, this.attendeeData).then(function () {
         console.log('MEETING STARTED?')
       });
+  }
+
+  easyCreateMeeting(formData: any) {
+    this.easyCreateMeetingLoading = true
+    this.chimeService.easyStartMeeting(formData.value.meetingTitle, formData.value.attendeeName).then(
+      data => {
+        console.log('Honestly not too sure about how this works')
+        this.easyCreateMeetingLoading = false
+      });
+
   }
 }

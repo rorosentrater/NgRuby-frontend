@@ -44,3 +44,24 @@
   <!--    <span class="visually-hidden">Loading...</span>-->
   <!--  </div>-->
 </div>
+<hr>
+<h1>Easy start</h1>
+<form #easycreateMeetingForm="ngForm" (ngSubmit)="easyCreateMeeting(easycreateMeetingForm)">
+  <div class="mb-3">
+    <label for="meetingTitle" class="form-label">Meeting Title</label>
+    <input type="text" class="form-control" name="meetingTitle" id="easymeetingTitle" aria-describedby="meetingTitleHelp" [(ngModel)]="meetingTitle" required>
+    <div id="easymeetingTitleHelp" class="form-text">This will just be used to alias the uuid of the meeting. No dupes!</div>
+  </div>
+  <div class="mb-3">
+    <label for="meetingTitle" class="form-label">Username</label>
+    <input type="text" class="form-control" name="attendeeName" id="easyattendeeName" aria-describedby="attendeeNameHelp" [(ngModel)]="attendeeName" required>
+    <div id="easyattendeeNameHelp" class="form-text">Again this will just be an alias for your attendee uuid. Dupes ok?</div>
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+  <div *ngIf="easyCreateMeetingLoading" class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</form>
+<div style="background-color: darkblue; padding: 30px; resize: both; overflow: auto;" class="mb-5">
+  <video id="{{videoElementID}}" style=" height: 100%; width: 100%;"></video>
+</div>
