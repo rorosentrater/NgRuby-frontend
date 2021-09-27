@@ -1,5 +1,8 @@
 <audio id="{{audioElementID}}"></audio>
-<h1>chime testing!</h1>
+<h1>Chime Testing!</h1>
+<p>Component to demonstrate how you would make a chime audio + video + chat call with custom UI.</p>
+<p><b>Step 1: </b>Input a name for both the meeting and yourself. These are just aliases. Both the meeting and your
+  attendee will be given a random uuid but these names look good in the UI and may be easier to remember for humans.</p>
 <form #createMeetingForm="ngForm" (ngSubmit)="createMeeting(createMeetingForm)">
   <div class="mb-3">
     <label for="meetingTitle" class="form-label">Meeting Title</label>
@@ -7,7 +10,7 @@
     <div id="meetingTitleHelp" class="form-text">This will just be used to alias the uuid of the meeting. No dupes!</div>
   </div>
   <div class="mb-3">
-    <label for="meetingTitle" class="form-label">Username</label>
+    <label for="attendeeName" class="form-label">Username</label>
     <input type="text" class="form-control" name="attendeeName" id="attendeeName" aria-describedby="attendeeNameHelp" [(ngModel)]="attendeeName" required>
     <div id="attendeeNameHelp" class="form-text">Again this will just be an alias for your attendee uuid. Dupes ok?</div>
   </div>
@@ -16,52 +19,69 @@
     <span class="visually-hidden">Loading...</span>
   </div>
 </form>
-  <div class="mb-3">
-    <h3>attendeeId: {{attendeeId}}</h3>
-    <h3>meetingId: {{meetingId}}</h3>
+<div *ngIf="meetingData">
+  <pre class="alert alert-secondary">{{meetingData | json}}</pre>
+  <p>By creating a new meeting (or joining an existing one if you used an existing meeting title) IDs have been assigned
+  to both the meeting, and your attendee. This is what you would use to manage multiple open meetings and attendees.
+  Having multiple open audio/video meetings doesnt usually make sense but you could see how this might be useful to
+  manage multiple text-only "meetings" where attendees are constantly dropping on/off the session.</p>
+  <h3>attendeeId: {{attendeeId}}</h3>
+  <h3>meetingId: {{meetingId}}</h3>
+  <p><b>Step 2: </b>Before we actually join the meeting though, let's make sure our audio and video devices are properly
+   configured. Depending on the user experience you are going for you might skip a step like this. You can use the first
+   audio + video device you find (These are usually the system default devices) and immediately start the meeting if you
+   wanted. To demonstrate the more cautious approach, we are going to list all devices and let the user pick which one
+   they want to use before starting the meeting.</p>
+<!--  <button (click)="logInputDevices()" class="btn btn-primary">debug</button>-->
+  <div class="alert alert-warning" *ngIf="chimeService.needPermission">
+    We need permission from your browser to access your camera & microphone. When the pop-up appears, choose Allow.
   </div>
-  <div class="mb-3">
-    <button type="button" class="btn btn-primary" (click)="createLogStream()">createLogStream</button>
-    <div *ngIf="createLogStreamLoading" class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
+  <div *ngIf="!chimeService.needPermission">
+
+    <form #startMeetingForm="ngForm" (ngSubmit)="easyStartMeeting(startMeetingForm)">
+      <div class="mb-3">
+        <label for="audioInput" class="form-label">Audio Input</label>
+        <select id="audioInput" class="form-select">
+          <option *ngFor="let opt of audioInputDevicesList"
+                  [value]="opt.deviceId"
+                  [selected]="opt.selected == true">
+            {{opt.label}}
+          </option>
+        </select>
+      </div>
+      <div class="progress my-3">
+        <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+      <div class="mb-3">
+        <label for="audioOutput" class="form-label">Audio Output</label>
+        <select id="audioOutput" class="form-select">
+          <option *ngFor="let opt of audioOutputDevicesList"
+                  [value]="opt.deviceId"
+                  [selected]="opt.selected == true">
+            {{opt.label}}
+          </option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="video" class="form-label">Camera</label>
+        <select id="video" class="form-select">
+          <option *ngFor="let opt of videoDevicesList"
+                  [value]="opt.deviceId"
+                  [selected]="opt.selected == true">
+            {{opt.label}}
+          </option>
+        </select>
+      </div>
+
+
+
+    </form>
+
+    <div style="background-color: darkblue; padding: 30px; resize: both; overflow: auto;" class="mb-5">
+      <video id="{{videoElementID}}" style=" height: 100%; width: 100%;"></video>
     </div>
   </div>
-  <div class="mb-3">
-    <button type="button" class="btn btn-primary" (click)="createBrowserLogStream()">createBrowserEventLogStream</button>
-    <div *ngIf="createBrowserLogStreamLoading" class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-<div class="mb-3">
-  <button type="button" class="btn btn-danger" (click)="endCurrentMeeting()">endCurrentMeeting</button>
-<!--  <div *ngIf="createBrowserLogStreamLoading" class="spinner-border text-primary" role="status">-->
-<!--    <span class="visually-hidden">Loading...</span>-->
-<!--  </div>-->
+
 </div>
-<div class="mb-3">
-  <button type="button" class="btn btn-success" (click)="startMeeting()">startMeeting</button>
-  <!--  <div *ngIf="createBrowserLogStreamLoading" class="spinner-border text-primary" role="status">-->
-  <!--    <span class="visually-hidden">Loading...</span>-->
-  <!--  </div>-->
-</div>
-<hr>
-<h1>Easy start</h1>
-<form #easycreateMeetingForm="ngForm" (ngSubmit)="easyCreateMeeting(easycreateMeetingForm)">
-  <div class="mb-3">
-    <label for="meetingTitle" class="form-label">Meeting Title</label>
-    <input type="text" class="form-control" name="meetingTitle" id="easymeetingTitle" aria-describedby="meetingTitleHelp" [(ngModel)]="meetingTitle" required>
-    <div id="easymeetingTitleHelp" class="form-text">This will just be used to alias the uuid of the meeting. No dupes!</div>
-  </div>
-  <div class="mb-3">
-    <label for="meetingTitle" class="form-label">Username</label>
-    <input type="text" class="form-control" name="attendeeName" id="easyattendeeName" aria-describedby="attendeeNameHelp" [(ngModel)]="attendeeName" required>
-    <div id="easyattendeeNameHelp" class="form-text">Again this will just be an alias for your attendee uuid. Dupes ok?</div>
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-  <div *ngIf="easyCreateMeetingLoading" class="spinner-border text-primary" role="status">
-    <span class="visually-hidden">Loading...</span>
-  </div>
-</form>
-<div style="background-color: darkblue; padding: 30px; resize: both; overflow: auto;" class="mb-5">
-  <video id="{{videoElementID}}" style=" height: 100%; width: 100%;"></video>
-</div>
+<button type="button" class="btn btn-danger" (click)="endCurrentMeeting()">End Meeting</button>
+

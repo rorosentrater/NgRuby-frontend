@@ -1,16 +1,17 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {environment} from '../../../environments/environment';
 // import { v4 as uuidv4 } from 'uuid';
 // import { Chime } from 'aws-sdk'
 import {
-  ConsoleLogger,
+  AudioVideoFacade, AudioVideoObserver,
+  ConsoleLogger, ContentShareObserver,
+  DefaultBrowserBehavior,
   DefaultDeviceController,
-  DefaultMeetingSession,
+  DefaultMeetingSession, DeviceChangeObserver,
   LogLevel,
   MeetingSessionConfiguration,
 } from 'amazon-chime-sdk-js';
 import {HttpClient} from '@angular/common/http';
-import {Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,11 @@ import {Observable} from "rxjs";
 export class ChimeService {
 
   constructor(private http: HttpClient) { }
+
+  defaultBrowserBehaviour: DefaultBrowserBehavior = new DefaultBrowserBehavior();
+  audioVideo: AudioVideoFacade | null = null;
+  needPermission = false;
+
 
   public createMeeting(meetingAlias: string, attendeeName: string, region='us-east-1') {
     return this.http.post(environment.chimeEndpoint + '/join', undefined, {
@@ -43,11 +49,53 @@ export class ChimeService {
     });
   }
 
-  public async startMeeting(meeting: object, attendee: object) {
-    const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.INFO); // Browser console logging
+  public createFacadeMeeting(meeting: object, attendee: object) {
+    // const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.INFO); // Browser console logging
+    // const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.DEBUG); // Browser console logging
+    const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.WARN); // Browser console logging
     const deviceController = new DefaultDeviceController(logger); // easy to use mic/camera/whatever interface
     const configuration = new MeetingSessionConfiguration(meeting, attendee); // client-side meeting config
-    const meetingSession = new DefaultMeetingSession(configuration, logger, deviceController); // Start session
+    const session = new DefaultMeetingSession(configuration, logger, deviceController) // Start session
+    session.audioVideo.addDeviceChangeObserver(new ChimeDeviceChangeObserver()); // Observer for device changes
+    this.setupDeviceLabelTrigger(session); // device label trigger override for knowing if we need browser perms or not
+    return session
+  }
+
+  private setupDeviceLabelTrigger(session: DefaultMeetingSession): void {
+    // Note that device labels are privileged since they add to the
+    // fingerprinting surface area of the browser session. In Chrome private
+    // tabs and in all Firefox tabs, the labels can only be read once a
+    // MediaStream is active. How to deal with this restriction depends on the
+    // desired UX. The device controller includes an injectable device label
+    // trigger which allows you to perform custom behavior in case there are no
+    // labels, such as creating a temporary audio/video stream to unlock the
+    // device names, which is the default behavior. Here we override the
+    // trigger to also show an alert to let the user know that we are asking for
+    // mic/camera permission.
+    //
+    // Also note that Firefox has its own device picker, which may be useful
+    // for the first device selection. Subsequent device selections could use
+    // a custom UX with a specific device id.
+    if(!this.defaultBrowserBehaviour.doesNotSupportMediaDeviceLabels())
+    {
+      session.audioVideo.setDeviceLabelTrigger(
+        async (): Promise<MediaStream> => {
+          // if (this.isRecorder() || this.isBroadcaster()) {
+          //   throw new Error('Recorder or Broadcaster does not need device labels');
+          // }
+          // this.switchToFlow('flow-need-permission');
+
+          this.needPermission = true; // Assume permissions are needed until stream resolved
+          // navigator.mediaDevices.getUserMedia({audio: true, video: true}); <--- !IS WHAT POPS THE BROWSER PERM MODAL!
+          const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+          this.needPermission = false; // Stream await blocks the thread so if we're here we can assume we got permission
+          return stream;
+        }
+      );
+    }
+  }
+
+  public async startMeeting(meetingSession: DefaultMeetingSession) {
     // TODO: Using default audio input for now. In a proper implementation this would be a multi-step setup. Or maybe
     //  defaulting is fine but give a settings button to config on the fly?
     try {
@@ -88,26 +136,12 @@ export class ChimeService {
     meetingSession.audioVideo.start();
   }
 
-  public async easyStartMeeting(meetingAlias: string, attendeeName: string, region='us-east-1') {
-    this.createMeeting(meetingAlias, attendeeName, region).subscribe(
+  public async easyStartMeeting(meetingSession: DefaultMeetingSession, attendeeId: string, meetingId: string) {
+    this.createLogStream(attendeeId, meetingId).subscribe(
       data => {
-        // @ts-ignore
-        const attendeeId = data.JoinInfo.Attendee.Attendee.AttendeeId
-        // @ts-ignore
-        const attendeeData = data.JoinInfo.Attendee.Attendee
-        // @ts-ignore
-        const meetingId = data.JoinInfo.Meeting.Meeting.MeetingId
-        // @ts-ignore
-        const meetingData = data.JoinInfo.Meeting.Meeting
-        console.log('Finished creating meeting')
-        console.log('attendeeId: ', attendeeId)
-        console.log('meetingId: ', meetingId)
-        this.createLogStream(attendeeId, meetingId).subscribe(
+        this.createBrowserEventLogStream(attendeeId, meetingId).subscribe(
           data => {
-            this.createBrowserEventLogStream(attendeeId, meetingId).subscribe(
-              data => {
-                this.startMeeting(meetingData, attendeeData)
-              })
+            this.startMeeting(meetingSession)
           })
       })
   }
@@ -120,5 +154,20 @@ export class ChimeService {
     });
   }
 
+}
+
+class ChimeDeviceChangeObserver {
+
+  audioOutputsChanged(freshAudioOutputDeviceList: any) {
+    console.log('Output list changed', freshAudioOutputDeviceList);
+  }
+
+  audioInputsChanged(freshAudioInputDeviceList: any) {
+    console.log('Input list changed', freshAudioInputDeviceList);
+  }
+
+  videoInputsChanged(freshVideoInputDeviceList: any) {
+    console.log('Video list changed', freshVideoInputDeviceList);
+  }
 
 }
