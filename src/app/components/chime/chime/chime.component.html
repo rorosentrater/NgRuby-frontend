@@ -39,14 +39,14 @@
   <div *ngIf="!chimeService.needPermission">
 
     <form #startMeetingForm="ngForm" (ngSubmit)="easyStartMeeting(startMeetingForm)">
+
+     <!-- [selected]="opt.? == ?" not sure if it makes sense in this scenario but if you somehow knew which
+     device should be pre-selected this is how you would do it.
+     I guess you could do [selected]="opt.deviceId == 'default'" but default seems to always be the 1st item so...  -->
       <div class="mb-3">
         <label for="audioInput" class="form-label">Audio Input</label>
         <select id="audioInput" class="form-select">
-          <option *ngFor="let opt of audioInputDevicesList"
-                  [value]="opt.deviceId"
-                  [selected]="opt.selected == true">
-            {{opt.label}}
-          </option>
+          <option *ngFor="let opt of deviceObserver?.audioInputDevices" [value]="opt.deviceId">{{opt.label}}</option>
         </select>
       </div>
       <div class="progress my-3">
@@ -55,25 +55,15 @@
       <div class="mb-3">
         <label for="audioOutput" class="form-label">Audio Output</label>
         <select id="audioOutput" class="form-select">
-          <option *ngFor="let opt of audioOutputDevicesList"
-                  [value]="opt.deviceId"
-                  [selected]="opt.selected == true">
-            {{opt.label}}
-          </option>
+          <option *ngFor="let opt of deviceObserver?.audioOutputDevices" [value]="opt.deviceId">{{opt.label}}</option>
         </select>
       </div>
       <div class="mb-3">
         <label for="video" class="form-label">Camera</label>
         <select id="video" class="form-select">
-          <option *ngFor="let opt of videoDevicesList"
-                  [value]="opt.deviceId"
-                  [selected]="opt.selected == true">
-            {{opt.label}}
-          </option>
+          <option *ngFor="let opt of deviceObserver?.videoDevices" [value]="opt.deviceId">{{opt.label}}</option>
         </select>
       </div>
-
-
 
     </form>
 

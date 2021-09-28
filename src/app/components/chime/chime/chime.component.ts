@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {environment} from '../../../../environments/environment';
-import {ChimeService} from '../../../services/chime/chime.service';
+import {ChimeService, ChimeDeviceChangeObserver} from '../../../services/chime/chime.service';
 import {DefaultMeetingSession} from "amazon-chime-sdk-js";
 
 
@@ -24,23 +24,9 @@ export class ChimeComponent implements OnInit {
   // @ts-ignore
   meetingTitle = ''
   meetingSession: DefaultMeetingSession | undefined;
+  deviceObserver: ChimeDeviceChangeObserver | undefined
 
   createMeetingResponse: any
-  audioInputDevicesList: {
-    selected?: boolean;
-    deviceId: string;
-    label: string
-  }[] = [];
-  audioOutputDevicesList: {
-    selected?: boolean;
-    deviceId: string;
-    label: string
-  }[] = [];
-  videoDevicesList: {
-    selected?: boolean;
-    deviceId: string;
-    label: string
-  }[] = [];
 
   constructor(public chimeService: ChimeService) { }
 
@@ -68,26 +54,9 @@ export class ChimeComponent implements OnInit {
         this.meetingData = data.JoinInfo.Meeting.Meeting
 
         // @ts-ignore
-        this.meetingSession = this.chimeService.createFacadeMeeting(this.meetingData, this.attendeeData)
-        // Get all device lists for form selects
-        // @ts-ignore
-        const audioInputDevices = await this.meetingSession.audioVideo.listAudioInputDevices();
-        // An array of MediaDeviceInfo objects
-        audioInputDevices.forEach(mediaDeviceInfo => {
-          // console.log(`DEVICE-ID: ${mediaDeviceInfo.deviceId} LABEL: ${mediaDeviceInfo.label}`);
-          this.audioInputDevicesList.push({deviceId: mediaDeviceInfo.deviceId, label: mediaDeviceInfo.label})
-        });
-        // @ts-ignore
-        const audioOutputDevices = await this.meetingSession.audioVideo.listAudioOutputDevices();
-        audioOutputDevices.forEach(mediaDeviceInfo => {
-          this.audioOutputDevicesList.push({deviceId: mediaDeviceInfo.deviceId, label: mediaDeviceInfo.label})
-        });
-        // @ts-ignore
-        const videoInputDevices = await this.meetingSession.audioVideo.listVideoInputDevices();
-        videoInputDevices.forEach(mediaDeviceInfo => {
-          this.videoDevicesList.push({deviceId: mediaDeviceInfo.deviceId, label: mediaDeviceInfo.label})
-        });
-
+        const facadeMeeting = await this.chimeService.createFacadeMeeting(this.meetingData, this.attendeeData);
+        this.meetingSession = facadeMeeting.session
+        this.deviceObserver = facadeMeeting.deviceObserver
         this.createMeetingLoading = false;
       });
   }

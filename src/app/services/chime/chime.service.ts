@@ -49,16 +49,24 @@ export class ChimeService {
     });
   }
 
-  public createFacadeMeeting(meeting: object, attendee: object) {
+  public async createFacadeMeeting(meeting: object, attendee: object) {
     // const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.INFO); // Browser console logging
     // const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.DEBUG); // Browser console logging
     const logger = new ConsoleLogger('ChimeMeetingLogsTESTngROB', LogLevel.WARN); // Browser console logging
     const deviceController = new DefaultDeviceController(logger); // easy to use mic/camera/whatever interface
     const configuration = new MeetingSessionConfiguration(meeting, attendee); // client-side meeting config
     const session = new DefaultMeetingSession(configuration, logger, deviceController) // Start session
-    session.audioVideo.addDeviceChangeObserver(new ChimeDeviceChangeObserver()); // Observer for device changes
+    // TODO: Is passing back an observer to the component that created the meeting good enough? Would more than 1
+    //  component need to observe device changes? Maybe that should be up to component <-> component communication?
+    var deviceObserver = new ChimeDeviceChangeObserver() // Instance an observer we will pass back to components
+    session.audioVideo.addDeviceChangeObserver(deviceObserver); // Observer for device changes
     this.setupDeviceLabelTrigger(session); // device label trigger override for knowing if we need browser perms or not
-    return session
+    // Get initial list of devices. DeviceChangeObserver will update these lists if needed
+    deviceObserver.audioInputDevices = await session.audioVideo.listAudioInputDevices();
+    deviceObserver.audioOutputDevices = await session.audioVideo.listAudioOutputDevices();
+    deviceObserver.videoDevices = await session.audioVideo.listVideoInputDevices();
+    // return session
+    return {session: session, deviceObserver: deviceObserver}
   }
 
   private setupDeviceLabelTrigger(session: DefaultMeetingSession): void {
@@ -156,18 +164,28 @@ export class ChimeService {
 
 }
 
-class ChimeDeviceChangeObserver {
+export class ChimeDeviceChangeObserver {
 
-  audioOutputsChanged(freshAudioOutputDeviceList: any) {
-    console.log('Output list changed', freshAudioOutputDeviceList);
-  }
+  audioInputDevices: MediaDeviceInfo[] = [];
+  audioOutputDevices: MediaDeviceInfo[] = [];
+  videoDevices: MediaDeviceInfo[] = [];
 
   audioInputsChanged(freshAudioInputDeviceList: any) {
     console.log('Input list changed', freshAudioInputDeviceList);
+    this.audioInputDevices = freshAudioInputDeviceList
+  }
+
+  audioOutputsChanged(freshAudioOutputDeviceList: any) {
+    console.log('Output list changed', freshAudioOutputDeviceList);
+    this.audioOutputDevices = freshAudioOutputDeviceList
   }
 
   videoInputsChanged(freshVideoInputDeviceList: any) {
     console.log('Video list changed', freshVideoInputDeviceList);
+    this.videoDevices = freshVideoInputDeviceList
   }
 
+  audioInputMuteStateChanged(device: any, muted: any) {
+    console.log('Device', device, muted ? 'is muted in hardware' : 'is not muted');
+  }
 }
