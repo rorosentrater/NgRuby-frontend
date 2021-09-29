@@ -103,6 +103,37 @@ export class ChimeService {
     }
   }
 
+  // Tries to update session with new video device selection and optionally outputs the video feed to a preview <video>
+  public async localVideoSelectionChangeHandler(session: DefaultMeetingSession, deviceId: string | null, showPreview: boolean) {
+    // TODO: Should probably have a separate ID for the local <video> element in case user wants to change video output
+    //  during an ongoing call.
+    const videoOutputElement = document.getElementById(environment.chimeVideoOutputElementID);
+    console.log('Video device selection changed')
+    let device;
+    try {
+      device = await session.audioVideo.chooseVideoInputDevice(deviceId);
+      console.log('session successfully updated Video device ', deviceId)
+    } catch (err) {
+      // handle error - unable to acquire video device perhaps due to permissions blocking
+      console.error('unable to acquire video device perhaps due to permissions blocking')
+      device = null
+    }
+    if (device === null) {
+      console.log('Selection was null or failed. Stopping local video preview')
+      if (showPreview) {
+        session.audioVideo.stopVideoPreviewForVideoInput(<HTMLVideoElement>videoOutputElement);
+      }
+      session.audioVideo.stopLocalVideoTile();
+      // TODO: Something like this should be done for a UI element I haven't created yet
+      // this.toggleButton('button-camera', 'off');
+      // TODO: If device is null do you need to clear the prev chooseVideoInputDevice?
+    }
+    if (showPreview) {
+      console.log('Outputting new video preview...')
+      session.audioVideo.startVideoPreviewForVideoInput(<HTMLVideoElement>videoOutputElement);
+    }
+  }
+
   public async startMeeting(meetingSession: DefaultMeetingSession) {
     // TODO: Using default audio input for now. In a proper implementation this would be a multi-step setup. Or maybe
     //  defaulting is fine but give a settings button to config on the fly?
@@ -128,6 +159,7 @@ export class ChimeService {
       // videoTileDidUpdate is called whenever a new tile is created or tileState changes.
       videoTileDidUpdate: (tileState: { boundAttendeeId: any; localTile: any; tileId: number; }) => {
         // Ignore a tile without attendee ID and other attendee's tile.
+        console.log('tileState observer saw this: ', tileState)
         if (!tileState.boundAttendeeId || !tileState.localTile) {
           return;
         }
@@ -137,11 +169,13 @@ export class ChimeService {
     };
 
     // @ts-ignore
-    meetingSession.audioVideo.addObserver(observer);
+    // meetingSession.audioVideo.addObserver(observer);
 
-    meetingSession.audioVideo.startLocalVideoTile();
+    // meetingSession.audioVideo.startLocalVideoTile();
 
-    meetingSession.audioVideo.start();
+
+    // START ACTUAL MEETING! This is when you start getting charged $$$
+    // meetingSession.audioVideo.start();
   }
 
   public async easyStartMeeting(meetingSession: DefaultMeetingSession, attendeeId: string, meetingId: string) {

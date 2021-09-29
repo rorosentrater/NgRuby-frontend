@@ -19,7 +19,7 @@
     <span class="visually-hidden">Loading...</span>
   </div>
 </form>
-<div *ngIf="meetingData">
+<div *ngIf="meetingSession">
   <pre class="alert alert-secondary">{{meetingData | json}}</pre>
   <p>By creating a new meeting (or joining an existing one if you used an existing meeting title) IDs have been assigned
   to both the meeting, and your attendee. This is what you would use to manage multiple open meetings and attendees.
@@ -45,8 +45,8 @@
      I guess you could do [selected]="opt.deviceId == 'default'" but default seems to always be the 1st item so...  -->
       <div class="mb-3">
         <label for="audioInput" class="form-label">Audio Input</label>
-        <select id="audioInput" class="form-select">
-          <option *ngFor="let opt of deviceObserver?.audioInputDevices" [value]="opt.deviceId">{{opt.label}}</option>
+        <select id="audioInput" name="audioInput" class="form-select" [(ngModel)]="selectedAudioInput">
+          <option *ngFor="let opt of deviceObserver?.audioInputDevices" [ngValue]="opt">{{opt.label}}</option>
         </select>
       </div>
       <div class="progress my-3">
@@ -54,16 +54,24 @@
       </div>
       <div class="mb-3">
         <label for="audioOutput" class="form-label">Audio Output</label>
-        <select id="audioOutput" class="form-select">
-          <option *ngFor="let opt of deviceObserver?.audioOutputDevices" [value]="opt.deviceId">{{opt.label}}</option>
+        <select id="audioOutput" name="audioOutput" class="form-select" [(ngModel)]="selectedAudioOutput">
+          <option *ngFor="let opt of deviceObserver?.audioOutputDevices" [ngValue]="opt">{{opt.label}}</option>
         </select>
       </div>
       <div class="mb-3">
         <label for="video" class="form-label">Camera</label>
-        <select id="video" class="form-select">
-          <option *ngFor="let opt of deviceObserver?.videoDevices" [value]="opt.deviceId">{{opt.label}}</option>
+        <select id="video" name="video" class="form-select"
+                [(ngModel)]="selectedVideoCamera"
+                (change)="chimeService.localVideoSelectionChangeHandler(
+                 meetingSession,
+                 selectedVideoCamera ? selectedVideoCamera.deviceId : null,
+                 true)">
+          <option [ngValue]="null"></option>
+          <option *ngFor="let opt of deviceObserver?.videoDevices" [ngValue]="opt">{{opt.label}}</option>
         </select>
       </div>
+      <pre>{{selectedVideoCamera | json}}</pre>
+      <button class="btn btn-success" type="submit">Start meeting</button>
 
     </form>
 

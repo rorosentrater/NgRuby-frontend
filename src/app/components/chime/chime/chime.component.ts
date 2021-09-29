@@ -23,8 +23,11 @@ export class ChimeComponent implements OnInit {
   meetingData = undefined
   // @ts-ignore
   meetingTitle = ''
-  meetingSession: DefaultMeetingSession | undefined;
+  meetingSession: DefaultMeetingSession | undefined
   deviceObserver: ChimeDeviceChangeObserver | undefined
+  selectedAudioInput: MediaDeviceInfo | null = null
+  selectedAudioOutput: MediaDeviceInfo | null = null
+  selectedVideoCamera: MediaDeviceInfo | null = null
 
   createMeetingResponse: any
 
@@ -57,6 +60,15 @@ export class ChimeComponent implements OnInit {
         const facadeMeeting = await this.chimeService.createFacadeMeeting(this.meetingData, this.attendeeData);
         this.meetingSession = facadeMeeting.session
         this.deviceObserver = facadeMeeting.deviceObserver
+        // Set selects to use first device in each list. This is usually the system default
+        this.selectedAudioInput = this.deviceObserver.audioInputDevices[0]
+        this.selectedAudioOutput = this.deviceObserver.audioOutputDevices[0]
+        this.selectedVideoCamera = this.deviceObserver.videoDevices[0]
+        // Default session device selection to these options so we can see the preview. select change events will update
+        // the selections as they happen
+        // await this.meetingSession.audioVideo.chooseVideoInputDevice(this.selectedVideoCamera);
+        await this.chimeService.localVideoSelectionChangeHandler(this.meetingSession, this.selectedVideoCamera.deviceId, true)
+
         this.createMeetingLoading = false;
       });
   }
@@ -91,5 +103,11 @@ export class ChimeComponent implements OnInit {
         console.log('Meeting should now be starting...')
         this.easyCreateMeetingLoading = false
       });
+  }
+
+  async debug($event: Event) {
+    console.log($event)
+    // await this.chimeService.localVideoSelectionChangeHandler(this.meetingSession, this.selectedVideoCamera.deviceId, true)
+
   }
 }
