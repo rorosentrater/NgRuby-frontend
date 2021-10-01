@@ -3,7 +3,7 @@ import {environment} from '../../../environments/environment';
 // import { v4 as uuidv4 } from 'uuid';
 // import { Chime } from 'aws-sdk'
 import {
-  AudioVideoFacade, AudioVideoObserver,
+  AudioVideoFacade, AudioVideoObserver, RemovableAnalyserNode,
   ConsoleLogger, ContentShareObserver,
   DefaultBrowserBehavior,
   DefaultDeviceController,
@@ -23,6 +23,10 @@ export class ChimeService {
   defaultBrowserBehaviour: DefaultBrowserBehavior = new DefaultBrowserBehavior();
   audioVideo: AudioVideoFacade | null = null;
   needPermission = false;
+
+  // You will only ever have 1 local volume indicator so we can put it on the service itself
+  analyserNode: RemovableAnalyserNode | null | undefined // Tracks audio device volume
+  localVolume: number | undefined  // Output volume % of analyserNode
 
 
   public createMeeting(meetingAlias: string, attendeeName: string, region='us-east-1') {
@@ -109,16 +113,21 @@ export class ChimeService {
     //  during an ongoing call.
     const videoOutputElement = document.getElementById(environment.chimeVideoOutputElementID);
     console.log('Video device selection changed')
-    let device;
-    try {
-      device = await session.audioVideo.chooseVideoInputDevice(deviceId);
-      console.log('session successfully updated Video device ', deviceId)
-    } catch (err) {
-      // handle error - unable to acquire video device perhaps due to permissions blocking
-      console.error('unable to acquire video device perhaps due to permissions blocking')
-      device = null
+    // Try to select device
+    if (deviceId) {
+      try {
+        // TODO: I guess sending null to chooseVideoInputDevice tries to select the default device. I made this function
+        //  to interpret deviceId = null as a clear but maybe it should support null and use undefined as the clear.
+        await session.audioVideo.chooseVideoInputDevice(deviceId);
+        console.log('session successfully updated Video device ', deviceId)
+      } catch (err) {
+        // handle error - unable to acquire video device perhaps due to permissions blocking
+        console.error('unable to acquire video device perhaps due to permissions blocking')
+        deviceId = null
+      }
     }
-    if (device === null) {
+    // if device selection failed or this is a clear
+    if (deviceId === null) {
       console.log('Selection was null or failed. Stopping local video preview')
       if (showPreview) {
         session.audioVideo.stopVideoPreviewForVideoInput(<HTMLVideoElement>videoOutputElement);
@@ -126,12 +135,61 @@ export class ChimeService {
       session.audioVideo.stopLocalVideoTile();
       // TODO: Something like this should be done for a UI element I haven't created yet
       // this.toggleButton('button-camera', 'off');
-      // TODO: If device is null do you need to clear the prev chooseVideoInputDevice?
+    } else { // device is selected. output video to preview element
+      if (showPreview) {
+        console.log('Outputting new video preview...')
+        session.audioVideo.startVideoPreviewForVideoInput(<HTMLVideoElement>videoOutputElement);
+      }
     }
-    if (showPreview) {
-      console.log('Outputting new video preview...')
-      session.audioVideo.startVideoPreviewForVideoInput(<HTMLVideoElement>videoOutputElement);
+  }
+
+  // Remember to clean up! Making analyser nodes creates memory leaks!
+  public killAnalyserNode (analyserNode: RemovableAnalyserNode) {
+    analyserNode.disconnect();
+    analyserNode.removeOriginalInputs();
+  }
+
+  public startAudioPreview(session: DefaultMeetingSession) {
+    // const audioVolumeOutputElement = document.getElementById(environment.chimeLocalAudioVolumeElementID);
+    // if we have an old existing node, kill it
+    if (this.analyserNode) {
+      // kill the old node and make a new one
+      this.killAnalyserNode(this.analyserNode)
     }
+    // make new node
+    this.analyserNode = session.audioVideo.createAnalyserNodeForAudioInput();
+
+
+    // If for some reason we are unable to get volume data, hide the volume indicator
+    if (!this.analyserNode?.getByteTimeDomainData) {
+      const volumeElement = document.getElementById(environment.chimeLocalAudioVolumeElementID)
+      if (volumeElement) volumeElement.style.visibility = 'hidden'
+      return;
+    }
+
+    const data = new Uint8Array(this.analyserNode.fftSize);
+    let frameIndex = 0;
+    let analyserNodeCallback = () => {
+      if (this.analyserNode) {
+        if (frameIndex === 0) {
+          this.analyserNode.getByteTimeDomainData(data);
+          const lowest = 0.01;
+          let max = lowest;
+          for (const f of data) {
+            max = Math.max(max, (f - 128) / 128);
+          }
+          let normalized = (Math.log(lowest) - Math.log(max)) / Math.log(lowest);
+          let percent = Math.min(Math.max(normalized * 100, 0), 100);
+          // console.log('Local audio percentage: ', percent)
+          this.localVolume = percent
+        }
+        frameIndex = (frameIndex + 1) % 2;
+        if (analyserNodeCallback) {
+          requestAnimationFrame(analyserNodeCallback);
+        }
+      }
+    };
+    requestAnimationFrame(analyserNodeCallback);
   }
 
   public async startMeeting(meetingSession: DefaultMeetingSession) {
@@ -175,7 +233,7 @@ export class ChimeService {
 
 
     // START ACTUAL MEETING! This is when you start getting charged $$$
-    // meetingSession.audioVideo.start();
+    meetingSession.audioVideo.start();
   }
 
   public async easyStartMeeting(meetingSession: DefaultMeetingSession, attendeeId: string, meetingId: string) {

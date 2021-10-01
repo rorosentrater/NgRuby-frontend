@@ -12,6 +12,7 @@ import {DefaultMeetingSession} from "amazon-chime-sdk-js";
 export class ChimeComponent implements OnInit {
   audioElementID = environment.chimeAudioOutputElementID
   videoElementID = environment.chimeVideoOutputElementID
+  volumeElementID = environment.chimeLocalAudioVolumeElementID
   createMeetingLoading = false
   easyCreateMeetingLoading = false
 
@@ -66,8 +67,12 @@ export class ChimeComponent implements OnInit {
         this.selectedVideoCamera = this.deviceObserver.videoDevices[0]
         // Default session device selection to these options so we can see the preview. select change events will update
         // the selections as they happen
-        // await this.meetingSession.audioVideo.chooseVideoInputDevice(this.selectedVideoCamera);
         await this.chimeService.localVideoSelectionChangeHandler(this.meetingSession, this.selectedVideoCamera.deviceId, true)
+        await this.meetingSession.audioVideo.chooseAudioInputDevice(this.selectedAudioInput.deviceId)
+        // this.chimeService.audioLevel(this.meetingSession, this.attendeeId)
+        this.chimeService.startAudioPreview(this.meetingSession)
+        await this.meetingSession.audioVideo.chooseAudioOutputDevice(this.selectedAudioOutput.deviceId)
+
 
         this.createMeetingLoading = false;
       });
@@ -109,5 +114,12 @@ export class ChimeComponent implements OnInit {
     console.log($event)
     // await this.chimeService.localVideoSelectionChangeHandler(this.meetingSession, this.selectedVideoCamera.deviceId, true)
 
+  }
+
+  async changeChosenAudioInput() {
+    if (this.meetingSession) {
+      await this.meetingSession.audioVideo.chooseAudioInputDevice(this.selectedAudioInput?.deviceId || '')
+      this.chimeService.startAudioPreview(this.meetingSession)
+    }
   }
 }

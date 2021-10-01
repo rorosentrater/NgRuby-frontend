@@ -3,7 +3,7 @@
 <p>Component to demonstrate how you would make a chime audio + video + chat call with custom UI.</p>
 <p><b>Step 1: </b>Input a name for both the meeting and yourself. These are just aliases. Both the meeting and your
   attendee will be given a random uuid but these names look good in the UI and may be easier to remember for humans.</p>
-<form #createMeetingForm="ngForm" (ngSubmit)="createMeeting(createMeetingForm)">
+<form #createMeetingForm="ngForm" (ngSubmit)="createMeeting(createMeetingForm)" class="mb-3">
   <div class="mb-3">
     <label for="meetingTitle" class="form-label">Meeting Title</label>
     <input type="text" class="form-control" name="meetingTitle" id="meetingTitle" aria-describedby="meetingTitleHelp" [(ngModel)]="meetingTitle" required>
@@ -45,16 +45,24 @@
      I guess you could do [selected]="opt.deviceId == 'default'" but default seems to always be the 1st item so...  -->
       <div class="mb-3">
         <label for="audioInput" class="form-label">Audio Input</label>
-        <select id="audioInput" name="audioInput" class="form-select" [(ngModel)]="selectedAudioInput">
+        <select id="audioInput" name="audioInput" class="form-select"
+                [(ngModel)]="selectedAudioInput"
+                (change)="changeChosenAudioInput()">
           <option *ngFor="let opt of deviceObserver?.audioInputDevices" [ngValue]="opt">{{opt.label}}</option>
         </select>
       </div>
       <div class="progress my-3">
-        <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+        <div id="{{volumeElementID}}" class="progress-bar bg-success" role="progressbar"
+             [style]="'width: ' + chimeService.localVolume + '%'"
+             [attr.aria-valuenow]="chimeService.localVolume"
+             aria-valuemin="0" aria-valuemax="100">
+        </div>
       </div>
       <div class="mb-3">
         <label for="audioOutput" class="form-label">Audio Output</label>
-        <select id="audioOutput" name="audioOutput" class="form-select" [(ngModel)]="selectedAudioOutput">
+        <select id="audioOutput" name="audioOutput" class="form-select"
+                [(ngModel)]="selectedAudioOutput"
+                (change)="meetingSession.audioVideo.chooseAudioOutputDevice(selectedAudioOutput?.deviceId || '')">
           <option *ngFor="let opt of deviceObserver?.audioOutputDevices" [ngValue]="opt">{{opt.label}}</option>
         </select>
       </div>
@@ -75,11 +83,14 @@
 
     </form>
 
-    <div style="background-color: darkblue; padding: 30px; resize: both; overflow: auto;" class="mb-5">
-      <video id="{{videoElementID}}" style=" height: 100%; width: 100%;"></video>
-    </div>
+
   </div>
 
+</div>
+<!-- Using [hidden]="!meetingSession" because video and audio binding to HTML freaks out if it can't find the supplied
+ element and ngif is usually too slow. -->
+<div style="background-color: darkblue; padding: 30px; resize: both; overflow: auto;" class="mb-5" [hidden]="!meetingSession">
+  <video id="{{videoElementID}}" style=" height: 100%; width: 100%;"></video>
 </div>
 <button type="button" class="btn btn-danger" (click)="endCurrentMeeting()">End Meeting</button>
 
