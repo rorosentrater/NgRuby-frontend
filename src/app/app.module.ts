@@ -20,6 +20,7 @@ import { UnrelatedComponent } from './components/component-service-communication
 import { CtoCComponent } from './components/component-service-communication/component-component/cto-c/cto-c.component';
 import { Unrelated2Component } from './components/component-service-communication/component-component/unrelated2/unrelated2.component';
 import { ChimeComponent } from './components/chime/chime/chime.component';
+import { BackgroundComponent } from './components/background/background.component';
 
 @NgModule({
   declarations: [
@@ -38,7 +39,9 @@ import { ChimeComponent } from './components/chime/chime/chime.component';
     UnrelatedComponent,
     CtoCComponent,
     Unrelated2Component,
-    ChimeComponent
+    ChimeComponent,
+    BackgroundComponent,
+
   ],
   imports: [
     BrowserModule,

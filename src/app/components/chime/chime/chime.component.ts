@@ -64,10 +64,10 @@ export class ChimeComponent implements OnInit {
         // Set selects to use first device in each list. This is usually the system default
         this.selectedAudioInput = this.deviceObserver.audioInputDevices[0]
         this.selectedAudioOutput = this.deviceObserver.audioOutputDevices[0]
-        this.selectedVideoCamera = this.deviceObserver.videoDevices[0]
+        this.selectedVideoCamera = this.deviceObserver.videoDevices[0] || null
         // Default session device selection to these options so we can see the preview. select change events will update
         // the selections as they happen
-        await this.chimeService.localVideoSelectionChangeHandler(this.meetingSession, this.selectedVideoCamera.deviceId, true)
+        await this.chimeService.localVideoSelectionChangeHandler(this.meetingSession, this.selectedVideoCamera?.deviceId, true)
         await this.meetingSession.audioVideo.chooseAudioInputDevice(this.selectedAudioInput.deviceId)
         // this.chimeService.audioLevel(this.meetingSession, this.attendeeId)
         this.chimeService.startAudioPreview(this.meetingSession)
@@ -79,6 +79,9 @@ export class ChimeComponent implements OnInit {
   }
 
   endCurrentMeeting() {
+    if (this.meetingSession) {
+      this.meetingSession.audioVideo.stop();
+    }
     // @ts-ignore
     this.chimeService.endMeeting(this.meetingTitle).subscribe(
       data => {

@@ -193,26 +193,12 @@ export class ChimeService {
   }
 
   public async startMeeting(meetingSession: DefaultMeetingSession) {
-    // TODO: Using default audio input for now. In a proper implementation this would be a multi-step setup. Or maybe
-    //  defaulting is fine but give a settings button to config on the fly?
-    try {
-      const audioInputs = await meetingSession.audioVideo.listAudioInputDevices();
-      await meetingSession.audioVideo.chooseAudioInputDevice(audioInputs[0].deviceId);
-    } catch (err) {
-      // handle error - unable to acquire audio device perhaps due to permissions blocking
-      console.error('unable to acquire audio device perhaps due to permissions blocking')
-    }
-    try {
-      const videoInputs = await meetingSession.audioVideo.listVideoInputDevices();
-      await meetingSession.audioVideo.chooseVideoInputDevice(videoInputs[0].deviceId);
-    } catch (err) {
-      // handle error - unable to acquire video device perhaps due to permissions blocking
-      console.error('unable to acquire video device perhaps due to permissions blocking')
-    }
     const audioOutputElement = document.getElementById(environment.chimeAudioOutputElementID);
     await meetingSession.audioVideo.bindAudioElement(<HTMLAudioElement>audioOutputElement);
     const videoOutputElement = document.getElementById(environment.chimeVideoOutputElementID);
 
+    // Make observer object.
+    // Chime has tons of events that occur when certain things happen. List any you want to hook into here.
     const observer = {
       // videoTileDidUpdate is called whenever a new tile is created or tileState changes.
       videoTileDidUpdate: (tileState: { boundAttendeeId: any; localTile: any; tileId: number; }) => {
@@ -223,11 +209,39 @@ export class ChimeService {
         }
 
         meetingSession.audioVideo.bindVideoElement(tileState.tileId, <HTMLVideoElement>videoOutputElement);
-      }
+      },
+      // eventDidReceive(name: string, attributes: any) {
+      //   console.log('EVENT')
+      //   console.log(name)
+      //   switch (name) {
+      //     case 'attendeePresenceReceived':
+      //       console.log('EVENT: attendeePresenceReceived')
+      //       console.log(attributes)
+      //   }
+      // }
+
     };
+    let attendeePresenceHandler = function (attendeeId: string, present: boolean) {
+      meetingSession.audioVideo.realtimeSubscribeToVolumeIndicator(
+        attendeeId,
+        async (
+          attendeeId: string,
+          volume: number | null,
+          muted: boolean | null,
+          signalStrength: number | null
+        ) => {
+          // Handle volume strength changed event
+          console.log('---------- attendeePresenceHandler ----------')
+          console.log('attendeeId', attendeeId)
+          console.log('volume', volume)
+          console.log('muted', muted)
+          console.log('signalStrength', signalStrength)
+        });
+    }
 
     // @ts-ignore
-    // meetingSession.audioVideo.addObserver(observer);
+    meetingSession.audioVideo.addObserver(observer);
+    meetingSession.audioVideo.realtimeSubscribeToAttendeeIdPresence(attendeePresenceHandler);
 
     // meetingSession.audioVideo.startLocalVideoTile();
 
