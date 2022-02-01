@@ -10,6 +10,7 @@ import {
   DefaultMeetingSession, DeviceChangeObserver,
   LogLevel,
   MeetingSessionConfiguration,
+  DefaultModality,
 } from 'amazon-chime-sdk-js';
 import {HttpClient} from '@angular/common/http';
 
@@ -27,6 +28,9 @@ export class ChimeService {
   // You will only ever have 1 local volume indicator so we can put it on the service itself
   analyserNode: RemovableAnalyserNode | null | undefined // Tracks audio device volume
   localVolume: number | undefined  // Output volume % of analyserNode
+  // TODO: roster should be kept track of in the component, not here in the service, similar to how meeting object is.
+  //  Even though I don't have a certain use-case in mind this service should be written to handle multiple meetings.
+  roster = {};
 
 
   public createMeeting(meetingAlias: string, attendeeName: string, region='us-east-1') {
@@ -221,6 +225,7 @@ export class ChimeService {
       // }
 
     };
+    let me = this
     let attendeePresenceHandler = function (attendeeId: string, present: boolean) {
       meetingSession.audioVideo.realtimeSubscribeToVolumeIndicator(
         attendeeId,
@@ -231,11 +236,58 @@ export class ChimeService {
           signalStrength: number | null
         ) => {
           // Handle volume strength changed event
-          console.log('---------- attendeePresenceHandler ----------')
-          console.log('attendeeId', attendeeId)
-          console.log('volume', volume)
-          console.log('muted', muted)
-          console.log('signalStrength', signalStrength)
+          // console.log('---------- attendeePresenceHandler ----------')
+          // console.log('attendeeId', attendeeId)
+          // console.log('volume', volume)
+          // console.log('muted', muted)
+          // console.log('signalStrength', signalStrength)
+          const baseAttendeeId = new DefaultModality(attendeeId).base();
+          if (baseAttendeeId !== attendeeId) {
+            // Optional: Do not include the content attendee (attendee-id#content) in the roster.
+            // See the "Screen and content share" section for details.
+            return;
+          }
+
+          if (me.roster.hasOwnProperty(attendeeId)) {
+            console.log('This user is already in roster, updating with:')
+            console.log('---------- attendeePresenceHandler ----------')
+            console.log('attendeeId', attendeeId)
+            console.log('volume', volume)
+            console.log('muted', muted)
+            console.log('signalStrength', signalStrength)
+            // A null value for any field means that it has not changed.
+            if (volume !== null) {
+              // @ts-ignore
+              me.roster[attendeeId].volume = volume; // a fraction between 0 and 1
+            }
+            if (muted !== null) {
+              // @ts-ignore
+              me.roster[attendeeId].muted = muted; // A boolean
+            }
+            if (signalStrength !== null) {
+              // @ts-ignore
+              me.roster[attendeeId].signalStrength = signalStrength; // 0 (no signal), 0.5 (weak), 1 (strong)
+            }
+          } else {
+            // Add an attendee.
+            // Optional: You can fetch more data, such as attendee name,
+            // from your server application and set them here.
+            console.log('First time user has been seen. Creating new roster obj with this info:')
+            console.log('---------- attendeePresenceHandler ----------')
+            console.log('attendeeId', attendeeId)
+            console.log('volume', volume)
+            console.log('muted', muted)
+            console.log('signalStrength', signalStrength)
+            // @ts-ignore
+            me.roster[attendeeId] = {
+              attendeeId,
+              volume,
+              muted,
+              signalStrength
+            };
+          }
+          console.log('Roster OBJ updated:')
+          console.log(me.roster)
         });
     }
 
