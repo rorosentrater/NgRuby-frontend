@@ -25,6 +25,7 @@ export class ChimeComponent implements OnInit {
   // @ts-ignore
   meetingTitle = ''
   meetingSession: DefaultMeetingSession | undefined
+  roster = {}
   deviceObserver: ChimeDeviceChangeObserver | undefined
   selectedAudioInput: MediaDeviceInfo | null = null
   selectedAudioOutput: MediaDeviceInfo | null = null
@@ -92,6 +93,7 @@ export class ChimeComponent implements OnInit {
         this.meetingTitle = ''
         this.meetingSession = undefined
         this.createMeetingResponse = {}
+        this.roster = {}
       });
   }
 
@@ -106,7 +108,7 @@ export class ChimeComponent implements OnInit {
   easyStartMeeting(formData: any) {
     this.easyCreateMeetingLoading = true
     // @ts-ignore
-    this.chimeService.easyStartMeeting(this.meetingSession, this.attendeeId, this.meetingId).then(
+    this.chimeService.easyStartMeeting(this.meetingSession, this.attendeeId, this.meetingId, this.roster).then(
       data => {
         console.log('Meeting should now be starting...')
         this.easyCreateMeetingLoading = false

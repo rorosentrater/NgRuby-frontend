@@ -28,9 +28,6 @@ export class ChimeService {
   // You will only ever have 1 local volume indicator so we can put it on the service itself
   analyserNode: RemovableAnalyserNode | null | undefined // Tracks audio device volume
   localVolume: number | undefined  // Output volume % of analyserNode
-  // TODO: roster should be kept track of in the component, not here in the service, similar to how meeting object is.
-  //  Even though I don't have a certain use-case in mind this service should be written to handle multiple meetings.
-  roster = {};
 
 
   public createMeeting(meetingAlias: string, attendeeName: string, region='us-east-1') {
@@ -196,7 +193,7 @@ export class ChimeService {
     requestAnimationFrame(analyserNodeCallback);
   }
 
-  public async startMeeting(meetingSession: DefaultMeetingSession) {
+  public async startMeeting(meetingSession: DefaultMeetingSession, roster: object) {
     const audioOutputElement = document.getElementById(environment.chimeAudioOutputElementID);
     await meetingSession.audioVideo.bindAudioElement(<HTMLAudioElement>audioOutputElement);
     const videoOutputElement = document.getElementById(environment.chimeVideoOutputElementID);
@@ -205,14 +202,22 @@ export class ChimeService {
     // Chime has tons of events that occur when certain things happen. List any you want to hook into here.
     const observer = {
       // videoTileDidUpdate is called whenever a new tile is created or tileState changes.
-      videoTileDidUpdate: (tileState: { boundAttendeeId: any; localTile: any; tileId: number; }) => {
+      videoTileDidUpdate: (tileState: { boundAttendeeId: any; localTile: any; tileId: number; isContent: boolean }) => {
         // Ignore a tile without attendee ID and other attendee's tile.
         console.log('tileState observer saw this: ', tileState)
-        if (!tileState.boundAttendeeId || !tileState.localTile) {
-          return;
-        }
 
-        meetingSession.audioVideo.bindVideoElement(tileState.tileId, <HTMLVideoElement>videoOutputElement);
+        // Ignore a tile without attendee ID or a content share. TODO: content share should eventually get a case
+        if (!tileState.boundAttendeeId || tileState.isContent) {
+          return;
+        } else if (tileState.localTile) { // If this is the localTile, bind to the local HTML videoOutputElement
+          meetingSession.audioVideo.bindVideoElement(tileState.tileId, <HTMLVideoElement>videoOutputElement);
+        } else { // Otherwise this is a different attendee's tile. Try to find a video element by using...
+          // chimeVideoOutputElementID + tileState.boundAttendeeId
+          const remoteAttendeeVideoOutputElement = document.getElementById(
+            environment.chimeVideoOutputElementID + tileState.boundAttendeeId
+          );
+          meetingSession.audioVideo.bindVideoElement(tileState.tileId, <HTMLVideoElement>remoteAttendeeVideoOutputElement);
+        }
       },
       // eventDidReceive(name: string, attributes: any) {
       //   console.log('EVENT')
@@ -225,7 +230,7 @@ export class ChimeService {
       // }
 
     };
-    let me = this
+
     let attendeePresenceHandler = function (attendeeId: string, present: boolean) {
       meetingSession.audioVideo.realtimeSubscribeToVolumeIndicator(
         attendeeId,
@@ -247,47 +252,32 @@ export class ChimeService {
             // See the "Screen and content share" section for details.
             return;
           }
-
-          if (me.roster.hasOwnProperty(attendeeId)) {
-            console.log('This user is already in roster, updating with:')
-            console.log('---------- attendeePresenceHandler ----------')
-            console.log('attendeeId', attendeeId)
-            console.log('volume', volume)
-            console.log('muted', muted)
-            console.log('signalStrength', signalStrength)
+          if (roster.hasOwnProperty(attendeeId)) {
             // A null value for any field means that it has not changed.
             if (volume !== null) {
               // @ts-ignore
-              me.roster[attendeeId].volume = volume; // a fraction between 0 and 1
+              roster[attendeeId].volume = volume; // a fraction between 0 and 1
             }
             if (muted !== null) {
               // @ts-ignore
-              me.roster[attendeeId].muted = muted; // A boolean
+              roster[attendeeId].muted = muted; // A boolean
             }
             if (signalStrength !== null) {
               // @ts-ignore
-              me.roster[attendeeId].signalStrength = signalStrength; // 0 (no signal), 0.5 (weak), 1 (strong)
+              roster[attendeeId].signalStrength = signalStrength; // 0 (no signal), 0.5 (weak), 1 (strong)
             }
           } else {
             // Add an attendee.
             // Optional: You can fetch more data, such as attendee name,
             // from your server application and set them here.
-            console.log('First time user has been seen. Creating new roster obj with this info:')
-            console.log('---------- attendeePresenceHandler ----------')
-            console.log('attendeeId', attendeeId)
-            console.log('volume', volume)
-            console.log('muted', muted)
-            console.log('signalStrength', signalStrength)
             // @ts-ignore
-            me.roster[attendeeId] = {
+            roster[attendeeId] = {
               attendeeId,
               volume,
               muted,
               signalStrength
             };
           }
-          console.log('Roster OBJ updated:')
-          console.log(me.roster)
         });
     }
 
@@ -295,19 +285,19 @@ export class ChimeService {
     meetingSession.audioVideo.addObserver(observer);
     meetingSession.audioVideo.realtimeSubscribeToAttendeeIdPresence(attendeePresenceHandler);
 
-    // meetingSession.audioVideo.startLocalVideoTile();
+    meetingSession.audioVideo.startLocalVideoTile();
 
 
     // START ACTUAL MEETING! This is when you start getting charged $$$
     meetingSession.audioVideo.start();
   }
 
-  public async easyStartMeeting(meetingSession: DefaultMeetingSession, attendeeId: string, meetingId: string) {
+  public async easyStartMeeting(meetingSession: DefaultMeetingSession, attendeeId: string, meetingId: string, roster: object) {
     this.createLogStream(attendeeId, meetingId).subscribe(
       data => {
         this.createBrowserEventLogStream(attendeeId, meetingId).subscribe(
           data => {
-            this.startMeeting(meetingSession)
+            this.startMeeting(meetingSession, roster)
           })
       })
   }
